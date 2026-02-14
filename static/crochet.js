@@ -104,7 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const popTargets = document.querySelectorAll(
     '.hero-modern__sub, .hero-modern__tagline, .feature-title, .shop-section__title, .about-story__heading'
   );
-  const glowCards = document.querySelectorAll('.feature-card-inner, .shop-page .product-card');
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   popTargets.forEach((el) => el.classList.add('text-pop'));
@@ -126,15 +125,5 @@ document.addEventListener('DOMContentLoaded', () => {
   );
 
   popTargets.forEach((el) => popObserver.observe(el));
-
-  glowCards.forEach((card) => {
-    card.addEventListener('mousemove', (e) => {
-      const rect = card.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      card.style.setProperty('--spotlight-x', `${x}px`);
-      card.style.setProperty('--spotlight-y', `${y}px`);
-    });
-  });
 });
 
