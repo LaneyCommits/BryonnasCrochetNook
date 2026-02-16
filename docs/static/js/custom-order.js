@@ -48,14 +48,18 @@
 
     setSubmitting(true);
 
-    fetch('/api/custom-order', {
+    fetch('https://formspree.io/f/xgolykoe', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
       body: JSON.stringify(payload)
     })
       .then(function (res) {
         return res.json().then(function (data) {
-          if (res.ok && data.ok) {
+          var isSuccess = res.ok && (data.ok !== false) && !(data.errors && data.errors.length);
+          if (isSuccess) {
             if (formContainer) formContainer.hidden = true;
             if (thankYou) {
               thankYou.hidden = false;
@@ -63,7 +67,8 @@
             }
             return;
           }
-          showMessage(data.error || 'Something went wrong. Please try again.', true);
+          var errMsg = data.error || (data.errors && data.errors[0] && data.errors[0].message) || 'Something went wrong. Please try again.';
+          showMessage(errMsg, true);
         });
       })
       .catch(function () {

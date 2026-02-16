@@ -50,3 +50,18 @@ git push
 ```
 
 GitHub Pages should be set to **Source: Deploy from a branch** → **main** → **/docs**.
+
+### Sending custom order forms to Bryonna via email
+
+**Django (local or hosted server):** Set `BCN_EMAIL_APP_PASSWORD` in `.env` (see above). Submissions are saved to the database and emailed to `bcn.shop24@gmail.com`.
+
+**Static site (GitHub Pages):** There is no backend on GitHub Pages, so use [Formspree](https://formspree.io) to receive form submissions by email:
+
+1. Create a free account at [formspree.io](https://formspree.io).
+2. Create a new form and set the notification email to `bcn.shop24@gmail.com`.
+3. Copy your form endpoint (e.g. `https://formspree.io/f/xxxxxxxx`).
+4. When exporting, set the env var so the form posts to Formspree:
+   ```bash
+   STATIC_EXPORT_FORM_URL=https://formspree.io/f/YOUR_FORM_ID python manage.py export_static
+   ```
+5. Push the updated `docs/` folder. Form submissions will be emailed to Bryonna.

@@ -94,6 +94,13 @@ class Command(BaseCommand):
             text = text.replace("'/api/custom-order'", repr(form_url))
             custom_js.write_text(text, encoding="utf-8")
             self.stdout.write(self.style.SUCCESS(f"Custom order form URL set to {form_url}"))
+        elif not form_url:
+            self.stdout.write(
+                self.style.WARNING(
+                    "STATIC_EXPORT_FORM_URL not set — custom order form on GitHub Pages will not send emails. "
+                    "See .env.example for Formspree setup."
+                )
+            )
 
         self.stdout.write(self.style.SUCCESS(f"Static export written to {out_dir}"))
         self.stdout.write(
