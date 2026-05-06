@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Install Django and dependencies so ./serve works
+cd "$(dirname "$0")"
+if [ -d "venv" ]; then
+  . venv/bin/activate
+fi
+
+if command -v python3 >/dev/null 2>&1; then
+  PY=python3
+elif command -v python >/dev/null 2>&1; then
+  PY=python
+else
+  echo "Error: Python not found. Install Python 3 and try again."
+  exit 1
+fi
+
+echo "Installing dependencies from requirements.txt..."
+if $PY -m pip install -r requirements.txt; then
+  echo ""
+  echo "Done. Next steps:"
+  echo "  1. python manage.py migrate"
+  echo "  2. python manage.py createsuperuser   (for admin login)"
+  echo "  3. ./serve"
+  exit 0
+fi
+
+echo ""
+echo "If that failed with an SSL certificate error, try:"
+echo "  $PY -m pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org -r requirements.txt"
+echo ""
+echo "Then run: python manage.py migrate && python manage.py createsuperuser && ./serve"
+exit 1

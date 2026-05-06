@@ -1,0 +1,112 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Request a custom crochet order from Bryonna's Crochet Nook.">
+  <title>Bryonna's Crochet Nook — Custom Orders</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Balsamiq+Sans:wght@400;700&family=Jua&family=Pangolin&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="static/style.css" rel="stylesheet">
+</head>
+<body class="app-body">
+  <header class="site-header site-header--full" role="banner">
+    <div class="header-bar">
+      <a href="index.html" class="brand" aria-label="Bryonna's Crochet Nook — Home">
+        <img src="static/img/Bryonnaslogo" alt="" class="brand-logo" width="56" height="56">
+        <span class="brand-name">Bryonna's Crochet Nook</span>
+      </a>
+      <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mainNav">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+      <nav id="mainNav" class="site-nav" aria-label="Main navigation">
+        <ul class="nav-list">
+          <li><a class="nav-link" href="index.html">Home</a></li>
+          <li><a class="nav-link" href="Shop.htm">Shop</a></li>
+          <li><a class="nav-link" href="aboutme.htm">About</a></li>
+          <li><a class="nav-cta" href="customorders.htm">Custom Order</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <div class="app-wrap">
+    <main id="main-content" class="site-main" role="main">
+      <section class="custom-order-section">
+        <h1 class="section-heading">Custom Orders</h1>
+        <p class="custom-order-intro">If there's something you'd like made that isn't on the site, fill out the form below and we'll get back to you within 5 business days (Monday–Friday).</p>
+
+        <div id="formContainer">
+          <form id="customOrderForm" class="custom-order-form" novalidate>
+            <fieldset class="order-options order-options--checkboxes">
+              <legend class="feature-title">Select items you're interested in</legend>
+              <p class="order-options__hint">Check all that apply (optional).</p>
+              <div class="order-options-grid">
+                <label class="order-option-checkbox"><input type="checkbox" name="selected_items" value="Regular-sized plushies (animals, food, objects, etc.)"> Regular-sized plushies</label>
+                <label class="order-option-checkbox"><input type="checkbox" name="selected_items" value="Jumbo-sized plushies"> Jumbo-sized plushies</label>
+                <label class="order-option-checkbox"><input type="checkbox" name="selected_items" value="Headbands"> Headbands</label>
+                <label class="order-option-checkbox"><input type="checkbox" name="selected_items" value="Scarves"> Scarves</label>
+                <label class="order-option-checkbox"><input type="checkbox" name="selected_items" value="Slipper socks"> Slipper socks</label>
+                <label class="order-option-checkbox"><input type="checkbox" name="selected_items" value="Beanies"> Beanies</label>
+                <label class="order-option-checkbox"><input type="checkbox" name="selected_items" value="Keychains (lip balm holder, small plushie, etc.)"> Keychains</label>
+                <label class="order-option-checkbox"><input type="checkbox" name="selected_items" value="Cup covers / warmers"> Cup covers / warmers</label>
+                <label class="order-option-checkbox"><input type="checkbox" name="selected_items" value="Coasters"> Coasters</label>
+                <label class="order-option-checkbox"><input type="checkbox" name="selected_items" value="Thick blankets"> Thick blankets</label>
+                <label class="order-option-checkbox"><input type="checkbox" name="selected_items" value="Fluffy blankets"> Fluffy blankets</label>
+                <label class="order-option-checkbox"><input type="checkbox" name="selected_items" value="Custom glass bead bracelets"> Custom glass bead bracelets</label>
+              </div>
+            </fieldset>
+
+            <label for="order">What would you like made? Include colors and any details.</label>
+            <textarea id="order" name="order" rows="5" required placeholder="e.g. A blue and white headband, size medium…"></textarea>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="fname">First name</label>
+                <input type="text" id="fname" name="first_name" required autocomplete="given-name">
+              </div>
+              <div class="form-group">
+                <label for="lname">Last name</label>
+                <input type="text" id="lname" name="last_name" required autocomplete="family-name">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" id="email" name="email" placeholder="you@example.com" required autocomplete="email">
+            </div>
+
+            <input type="text" name="_gotcha" id="gotcha" class="honeypot" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+            <div id="formMessage" class="form-message" role="alert" aria-live="polite" hidden></div>
+            <button type="submit" id="submitBtn" class="btn-cta">Send order request</button>
+          </form>
+        </div>
+
+        <div id="thankYouMessage" class="thank-you-message" hidden tabindex="-1">
+          <h2 class="feature-title">Thank you!</h2>
+          <p>Your request has been sent. We'll contact you at the email you provided within 5 business days (Monday–Friday).</p>
+          <a href="index.html" class="btn-cta">Back to home</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer" role="contentinfo">
+      <div class="footer-inner">
+        <p class="footer-copy">&copy; Bryonna's Crochet Nook.</p>
+        <p class="footer-links"><a href="#">Privacy</a> · <a href="#">Terms</a></p>
+        <p><a href="#main-content" class="back-to-top">Back to top</a></p>
+      </div>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="static/crochet.js"></script>
+  <script src="static/js/custom-order.js"></script>
+</body>
+</html>

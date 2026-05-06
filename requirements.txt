@@ -1,0 +1,4 @@
+# Bryonna's Crochet Nook — Django
+Django>=5.0.0
+python-dotenv>=1.0.0
+gunicorn>=23.0.0

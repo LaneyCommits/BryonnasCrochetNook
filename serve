@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Run Bryonna's Crochet Nook (Django only)
+cd "$(dirname "$0")"
+if [ -d "venv" ]; then
+  . venv/bin/activate
+fi
+
+if command -v python3 >/dev/null 2>&1; then
+  PY=python3
+elif command -v python >/dev/null 2>&1; then
+  PY=python
+else
+  echo "Error: Python not found. Install Python 3 and try again."
+  exit 1
+fi
+
+if ! $PY -c "import django" 2>/dev/null; then
+  echo "Error: Django is not installed."
+  echo ""
+  echo "Install it with (from this folder, venv activated if you use one):"
+  echo "  $PY -m pip install -r requirements.txt"
+  echo ""
+  echo "If you get an SSL certificate error, use:"
+  echo "  $PY -m pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org -r requirements.txt"
+  echo ""
+  exit 1
+fi
+
+echo "Starting Bryonna's Crochet Nook at http://127.0.0.1:8000"
+echo "Site: http://127.0.0.1:8000   Admin: http://127.0.0.1:8000/admin/"
+echo "Press Ctrl+C to stop."
+exec $PY manage.py runserver 0.0.0.0:8000

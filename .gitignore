@@ -1,11 +1,41 @@
+# Environment and secrets
+.env
+.env.local
+*.env
+
 # Python
 __pycache__/
-*.pyc
-backend/db.sqlite3
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
 
-# Node
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# IDE / OS
+.DS_Store
+.idea/
+*.code-workspace
+.vscode/
+
+# Duplicate images (Django uses static/img/ only)
+/img/
+
+# ignore env and common build dirs
+node_modules/
+dist/
 frontend/node_modules/
 frontend/dist/
+__pycache__/
+*.pyc
 
-# OS
-.DS_Store
+# Optional: keep .env.example so others know what to configure
+# .env.example is NOT ignored
