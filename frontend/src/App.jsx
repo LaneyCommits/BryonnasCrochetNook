@@ -1,8 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import HeroSlideshow from "./components/HeroSlideshow";
 
 /** Formspree form — notifications go to the address set in the Formspree dashboard. */
 const FORMSPREE_CUSTOM_ORDER_URL = "https://formspree.io/f/xgolykoe";
+
+/** Light client-side spam / double-submit guards (Formspree also filters on their side). */
+const CUSTOM_ORDER_MIN_FORM_AGE_MS = 3000;
+const CUSTOM_ORDER_MIN_INTERVAL_MS = 10_000;
+const CUSTOM_ORDER_SUCCESS_COOLDOWN_MS = 90_000;
 
 function SageLeafIcon({ flipped = false }) {
   return (
@@ -22,47 +27,17 @@ function SageLeafIcon({ flipped = false }) {
   );
 }
 
-const FEATURE_ITEMS = [
-  {
-    icon: "/bcnimg/featureicons/feature-01-handmade.png",
-    iconWidth: 182,
-    iconHeight: 121,
-    title: "Handmade with Love",
-    description: "Every item is crafted with care and attention.",
-  },
-  {
-    icon: "/bcnimg/featureicons/feature-04-heart-made.png",
-    iconWidth: 182,
-    iconHeight: 116,
-    title: "Small-Batch Creations",
-    description:
-      "Unique, limited pieces you won't find anywhere else.",
-  },
-  {
-    icon: "/bcnimg/featureicons/feature-03-gift.png",
-    iconWidth: 182,
-    iconHeight: 116,
-    title: "Perfect for Gifting",
-    description: "Cozy, thoughtful gifts for any occasion.",
-  },
-  {
-    icon: "/bcnimg/featureicons/feature-02-eco-leaf.png",
-    iconWidth: 140,
-    iconHeight: 121,
-    title: "Soft, Cozy & Durable",
-    description: "Made with quality yarns made to last.",
-  },
-];
-
 const collections = [
   {
     name: "Plushies",
     tone: "green",
+    shopCategory: "Plushies",
     image: "/bcnimg/bcnrounded/roundedfrog.jpeg",
   },
   {
     name: "Wearables",
     tone: "blue",
+    shopCategory: "Beanies",
     image: "/bcnimg/bcnrounded/roundedbeanie.jpeg",
     avatarObjectPosition: "58% 40%",
     avatarImageScale: 1.24,
@@ -70,11 +45,13 @@ const collections = [
   {
     name: "Accessories",
     tone: "green",
+    shopCategory: "Headbands",
     image: "/bcnimg/bcnrounded/roundedsunflower.jpeg",
   },
   {
     name: "Bracelets",
     tone: "blue",
+    shopCategory: "Bracelets",
     image: "/bcnimg/bcnrounded/roundedbracelet.png",
     avatarObjectPosition: "50% 45%",
     avatarImageScale: 1.12,
@@ -135,26 +112,13 @@ const SHOP_ITEMS = [
   },
 ];
 
-const ABOUT_EVENTS = [
-  {
-    id: "evt-1",
-    title: "Spring Handmade Market",
-    caption: "Raleigh, NC · April 2026",
-    image: "/bcnimg/bcnhero/bcnbunnyhero.png",
-  },
-  {
-    id: "evt-2",
-    title: "Crochet & Coffee Pop-Up",
-    caption: "Durham, NC · May 2026",
-    image: "/bcnimg/bcnhero/bcnfroggyhero.png",
-  },
-  {
-    id: "evt-3",
-    title: "Summer Yarn Fest",
-    caption: "Cary, NC · June 2026",
-    image: "/bcnimg/bcnhero/bcngummyhero.png",
-  },
-];
+const ABOUT_HERO_IMAGE = "/bcnimg/photos/people/BryonnaStandPicWithHer.jpeg";
+
+/** Static About hero copy (single photo — no carousel). */
+const ABOUT_HERO_COPY = {
+  title: "Spring Handmade Market",
+  caption: "Raleigh, NC · April 2026",
+};
 
 const PRODUCT_TYPE_CHOICES = [
   { id: "tote-bag", label: "Tote Bag", icon: "👜" },
@@ -169,7 +133,6 @@ function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activePage, setActivePage] = useState("home");
   const [activeCategory, setActiveCategory] = useState("All");
-  const [aboutSlide, setAboutSlide] = useState(0);
   const [formData, setFormData] = useState({
     name: "",
     item_type: "",
@@ -185,32 +148,11 @@ function App() {
   });
   const [referenceFiles, setReferenceFiles] = useState([]);
   const [status, setStatus] = useState("");
-
-  useEffect(() => {
-    // #region agent log
-    fetch("http://127.0.0.1:7609/ingest/93fcef51-dcf2-4ada-a8a8-820a8696631c", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "e1672a",
-      },
-      body: JSON.stringify({
-        sessionId: "e1672a",
-        runId: "deploy-sync",
-        hypothesisId: "H-PAGES",
-        location: "App.jsx:mount",
-        message: "Client boot context",
-        data: {
-          baseUrl: import.meta.env.BASE_URL,
-          href: window.location.href,
-          pathname: window.location.pathname,
-          hash: window.location.hash,
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
-  }, []);
+  const [spamTrap, setSpamTrap] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitCooldownUntil, setSubmitCooldownUntil] = useState(0);
+  const lastAttemptRef = useRef(0);
+  const formReadyAtRef = useRef(Date.now());
 
   const onChange = (event) => {
     const { name, value } = event.target;
@@ -219,7 +161,40 @@ function App() {
 
   const onSubmit = async (event) => {
     event.preventDefault();
+
+    if (spamTrap.trim() !== "") {
+      setStatus("Message could not be sent. Please try again later.");
+      return;
+    }
+
+    const now = Date.now();
+    if (submitCooldownUntil > 0 && now < submitCooldownUntil) {
+      const sec = Math.ceil((submitCooldownUntil - now) / 1000);
+      setStatus(
+        `You recently sent an order. Please wait ${sec} second${sec === 1 ? "" : "s"} before sending another.`,
+      );
+      return;
+    }
+
+    if (now - formReadyAtRef.current < CUSTOM_ORDER_MIN_FORM_AGE_MS) {
+      setStatus("Please take a moment to fill out the form before submitting.");
+      return;
+    }
+
+    if (
+      lastAttemptRef.current > 0 &&
+      now - lastAttemptRef.current < CUSTOM_ORDER_MIN_INTERVAL_MS
+    ) {
+      setStatus("Please wait a few seconds between send attempts.");
+      return;
+    }
+
+    if (isSubmitting) return;
+
+    lastAttemptRef.current = now;
+    setIsSubmitting(true);
     setStatus("Submitting...");
+
     try {
       const response = await fetch(FORMSPREE_CUSTOM_ORDER_URL, {
         method: "POST",
@@ -247,6 +222,8 @@ function App() {
             "Something went wrong. Please try again.",
         );
       }
+      setSubmitCooldownUntil(Date.now() + CUSTOM_ORDER_SUCCESS_COOLDOWN_MS);
+      setSpamTrap("");
       setStatus("Order submitted! We will contact you soon.");
       setFormData({
         name: "",
@@ -266,6 +243,8 @@ function App() {
       setStatus(
         error instanceof Error ? error.message : "Something went wrong.",
       );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -282,6 +261,11 @@ function App() {
     window.location.hash = hashByPage[page] ?? "#/";
   };
 
+  const openCollectionInShop = (category) => {
+    setActiveCategory(category);
+    goToPage("shop");
+  };
+
   useEffect(() => {
     const syncPageFromHash = () => {
       const hash = window.location.hash || "#/";
@@ -296,17 +280,30 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (activePage !== "about") return undefined;
-    const timer = setInterval(() => {
-      setAboutSlide((i) => (i + 1) % ABOUT_EVENTS.length);
-    }, 5000);
-    return () => clearInterval(timer);
+    if (activePage !== "home" && activePage !== "custom") return undefined;
+    formReadyAtRef.current = Date.now();
+    setSpamTrap("");
+    return undefined;
   }, [activePage]);
+
+  useEffect(() => {
+    if (!submitCooldownUntil) return undefined;
+    const id = window.setInterval(() => {
+      if (Date.now() >= submitCooldownUntil) {
+        setSubmitCooldownUntil(0);
+      }
+    }, 500);
+    return () => window.clearInterval(id);
+  }, [submitCooldownUntil]);
 
   const filteredShopItems =
     activeCategory === "All"
       ? SHOP_ITEMS
       : SHOP_ITEMS.filter((item) => item.category === activeCategory);
+
+  const submitDisabled =
+    isSubmitting ||
+    (submitCooldownUntil > 0 && Date.now() < submitCooldownUntil);
 
   const onFileChange = (event) => {
     const files = Array.from(event.target.files ?? []);
@@ -388,15 +385,12 @@ function App() {
         </button>
 
         <div className="nav-actions">
-          <button type="button" className="icon-btn" aria-label="Search">
-            <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden>
-              <path
-                fill="currentColor"
-                d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
-              />
-            </svg>
-          </button>
-          <button type="button" className="icon-btn cart-btn" aria-label="Shopping bag">
+          <button
+            type="button"
+            className="icon-btn cart-btn"
+            aria-label="Shop"
+            onClick={() => goToPage("shop")}
+          >
             <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden>
               <path
                 fill="currentColor"
@@ -455,24 +449,6 @@ function App() {
           </div>
 
           <main className="content">
-        <section className="features" aria-label="Highlights">
-          {FEATURE_ITEMS.map((item) => (
-            <article key={item.title}>
-              <img
-                className="feature-icon-img"
-                src={item.icon}
-                alt=""
-                width={item.iconWidth}
-                height={item.iconHeight}
-                loading="lazy"
-                decoding="async"
-              />
-              <h3>{item.title}</h3>
-              <p>{item.description}</p>
-            </article>
-          ))}
-        </section>
-
         <div className="shop-custom-row">
           <section id="shop" className="shop shop--compact">
             <div className="shop-header" id="wishlist">
@@ -480,20 +456,31 @@ function App() {
                 Shop Our Collection
                 <SageLeafIcon flipped />
               </h2>
-              <a href="#shop" className="shop-view-all">
+              <a
+                href="#/shop"
+                className="shop-view-all"
+                onClick={(event) => {
+                  event.preventDefault();
+                  setActiveCategory("All");
+                  goToPage("shop");
+                }}
+              >
                 View All Products <span aria-hidden>→</span>
               </a>
             </div>
             <div className="cards cards--compact">
               {collections.map((collection) => (
-                <div
+                <button
                   key={collection.name}
+                  type="button"
                   className={`card card--${collection.tone}`}
+                  onClick={() => openCollectionInShop(collection.shopCategory)}
+                  aria-label={`Shop ${collection.name}`}
                 >
                   <div className="card-avatar">
                     <img
                       src={collection.image}
-                      alt={`${collection.name} — sample photo`}
+                      alt=""
                       loading="lazy"
                       decoding="async"
                       style={{
@@ -511,7 +498,7 @@ function App() {
                   <span className="card-heart" aria-hidden>
                     ♥
                   </span>
-                </div>
+                </button>
               ))}
             </div>
           </section>
@@ -519,22 +506,21 @@ function App() {
 
         <section id="custom-order" className="custom-order">
           <div className="custom-order-row">
-            <div className="custom-order-card" id="custom-orders-promo">
-              <div className="custom-order-card__inner">
-                <h2>
-                  Custom Orders <span className="custom-heart">❤</span>
-                </h2>
-                <p>
-                  Have something special in mind? Let&apos;s make it
-                  one-of-a-kind.
-                </p>
-                <a href="#custom-form" className="banner-order-btn">
-                  Order Yours <span aria-hidden>❤</span>
-                </a>
-              </div>
-            </div>
-
             <form id="custom-form" onSubmit={onSubmit} className="order-form">
+              <h2 className="order-form__heading">
+                Custom Orders <span className="custom-heart">❤</span>
+              </h2>
+              <div className="order-form-hp" aria-hidden="true">
+                <label htmlFor="custom-order-hp">Company</label>
+                <input
+                  id="custom-order-hp"
+                  type="text"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={spamTrap}
+                  onChange={(e) => setSpamTrap(e.target.value)}
+                />
+              </div>
               <input
                 name="name"
                 value={formData.name}
@@ -564,7 +550,9 @@ function App() {
                 placeholder="Describe colors, size, and details"
                 rows={4}
               />
-              <button type="submit">Order Yours</button>
+              <button type="submit" disabled={submitDisabled}>
+                Order Yours
+              </button>
               {status && <p className="status">{status}</p>}
             </form>
           </div>
@@ -579,7 +567,7 @@ function App() {
             <div className="hero-media">
               <img
                 className="hero-photo"
-                src="/bcnimg/bcnhero/bcnfroggyhero.png"
+                src="/bcnimg/bcnhero/bcndinohero.png"
                 alt=""
                 decoding="async"
               />
@@ -591,18 +579,6 @@ function App() {
                       <span className="hero-title-made">Nook</span>
                     </span>
                   </h1>
-                  <p className="hero-lead">
-                    <a
-                      href="#/customorder"
-                      className="hero-lead-link"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        goToPage("custom");
-                      }}
-                    >
-                      Click to create a custom order
-                    </a>
-                  </p>
                 </div>
               </div>
             </div>
@@ -651,6 +627,18 @@ function App() {
               <p className="custom-helper">
                 Tell us what you have in mind and we&apos;ll create something special just for you!
               </p>
+
+              <div className="order-form-hp" aria-hidden="true">
+                <label htmlFor="custom-order-hp">Company</label>
+                <input
+                  id="custom-order-hp"
+                  type="text"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={spamTrap}
+                  onChange={(e) => setSpamTrap(e.target.value)}
+                />
+              </div>
 
               <section className="custom-step">
                 <h2 className="custom-step-title">
@@ -805,7 +793,13 @@ function App() {
                 </div>
               </section>
 
-              <button type="submit" className="custom-submit-btn">❤ Submit Custom Order</button>
+              <button
+                type="submit"
+                className="custom-submit-btn"
+                disabled={submitDisabled}
+              >
+                ❤ Submit Custom Order
+              </button>
               <p className="custom-submit-note">We&apos;ll review your request and contact you soon!</p>
               {status && <p className="status">{status}</p>}
             </form>
@@ -815,84 +809,34 @@ function App() {
 
       {activePage === "about" ? (
         <main id="about-page" className="content content--subpage">
-          <section className="hero hero--overlay hero--slideshow hero--subpage">
+          <section className="hero hero--overlay hero--slideshow hero--subpage hero--about">
             <div className="hero-media">
               <img
                 className="hero-photo"
-                src={ABOUT_EVENTS[aboutSlide].image}
-                alt=""
+                src={ABOUT_HERO_IMAGE}
+                alt="Bryonna at her crochet booth with handmade pieces on display."
                 decoding="async"
               />
               <div className="hero-copy-panel">
                 <div className="hero-copy-stack">
                   <h1 className="hero-heading">
                     <span className="hero-title-word">
-                      <span className="hero-title-hand">About</span>
-                      <span className="hero-title-made">Bryonna</span>
+                      <span className="hero-title-hand">Our</span>
+                      <span className="hero-title-made">Story</span>
                     </span>
                   </h1>
-                  <p className="hero-lead">{ABOUT_EVENTS[aboutSlide].title}</p>
-                  <p className="hero-lead-sub">{ABOUT_EVENTS[aboutSlide].caption}</p>
+                  <p className="hero-lead">{ABOUT_HERO_COPY.title}</p>
+                  <p className="hero-lead-sub">{ABOUT_HERO_COPY.caption}</p>
                 </div>
-              </div>
-              <div className="hero-dots" role="tablist" aria-label="Event indicators">
-                {ABOUT_EVENTS.map((event, index) => (
-                  <button
-                    key={event.id}
-                    type="button"
-                    role="tab"
-                    aria-selected={index === aboutSlide}
-                    className={`hero-dot ${index === aboutSlide ? "hero-dot--active" : ""}`}
-                    onClick={() => setAboutSlide(index)}
-                    aria-label={`Go to event ${index + 1}`}
-                  />
-                ))}
               </div>
             </div>
           </section>
 
           <section className="about about--full">
-            <h2>Our Story</h2>
-            <p>
-              Bryonna&apos;s Crochet Nook brings handmade softness, thoughtful color palettes,
-              and playful details to every piece. We focus on cozy designs that feel custom,
-              cute, and gift-ready.
-            </p>
+            <p>Coming soon&hellip;</p>
           </section>
         </main>
       ) : null}
-
-      <footer className="mobile-nav">
-        <a href="#home" className="mobile-nav-link mobile-nav-link--active">
-          <span className="mobile-nav-ico" aria-hidden>
-            ⌂
-          </span>
-          Home
-        </a>
-        <a href="#shop" className="mobile-nav-link">
-          <span className="mobile-nav-ico" aria-hidden>
-            ▦
-          </span>
-          Shop
-        </a>
-        <a href="#wishlist" className="mobile-nav-link">
-          <span className="mobile-nav-ico" aria-hidden>
-            ♡
-          </span>
-          Favorites
-        </a>
-        <a href="#custom-order" className="mobile-nav-link">
-          <span className="mobile-nav-ico mobile-nav-ico--cart" aria-hidden>
-            <svg width="19" height="19" viewBox="0 0 24 24" aria-hidden>
-              <path
-                fill="currentColor"
-                d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"
-              />
-            </svg>
-          </span>
-          Orders
-        </a>
-      </footer>
     </div>
   );
 }

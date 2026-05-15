@@ -4,8 +4,8 @@ const SLIDE_INTERVAL_MS = 5500;
 
 /** Paths match `public/bcnimg/bcnhero/` (source: `bcnimg/bcnhero/`). */
 export const HERO_IMAGE_URLS = [
-  "/bcnimg/bcnhero/bcnbunnyhero.png",
-  "/bcnimg/bcnhero/bcnfroggyhero.png",
+  "/bcnimg/bcnhero/bcnturtlehero.png",
+  "/bcnimg/bcnhero/bcndinohero.png",
   "/bcnimg/bcnhero/bcngummyhero.png",
 ];
 
@@ -50,7 +50,7 @@ export default function HeroSlideshow({ images = HERO_IMAGE_URLS }) {
             <p className="hero-lead">One Stitch at a Time</p>
             <p className="hero-lead-sub">Crochet Creations for You</p>
           </div>
-          <a href="#shop" className="hero-shop-btn">
+          <a href="#/shop" className="hero-shop-btn">
             Shop Now <span aria-hidden>→</span>
           </a>
         </div>
