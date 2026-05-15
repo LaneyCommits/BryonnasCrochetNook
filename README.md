@@ -19,6 +19,7 @@ Handmade crochet storefront: shop categories, about/events, and a custom-order f
 - **`frontend/`** — primary app; build output is `frontend/dist`
 - **`backend/`** — Django API/admin (optional for full stack)
 - **`bcnimg/`**, **`frontend/public/bcnimg/`** — product and UI images
+- **`legacy/pre-vite-static-site/`** — archived pre-React static export (not published)
 - **`.github/workflows/deploy-pages.yml`** — GitHub Actions → GitHub Pages
 
 ## Local development
@@ -58,7 +59,9 @@ If Source is still “Deploy from a branch,” the Actions artifact will not go 
 
 ### Verify the live build
 
-After a green workflow run, the deployed `index.html` should reference script tags like `/assets/...`, not `/BryonnasCrochetNook/assets/...` (the latter causes 404s on a custom domain).
+After a green workflow run, open the site and use **View Source** on the homepage. A correct Vite deploy shows a single `<div id="root">` and script tags like `/assets/index-*.js`. If you instead see links to **`Shop.htm`**, **`static/style.css`**, or **Bootstrap from a CDN**, GitHub Pages was serving the old static export from the **`/docs` folder** (that legacy copy now lives under `legacy/pre-vite-static-site/` in this repo). Switch **Pages → Source** to **GitHub Actions** and wait for the workflow to finish.
+
+Script tags must be root paths like `/assets/...`, not `/BryonnasCrochetNook/assets/...` (the latter causes 404s on a custom domain at the apex).
 
 ## Documentation
 

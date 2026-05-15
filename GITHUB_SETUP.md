@@ -54,5 +54,6 @@ It builds `frontend/` and deploys `frontend/dist` on every push to `main`.
 ## Troubleshooting
 
 - **Blank page or missing styles** — In **Settings → Pages**, ensure **Source** is **GitHub Actions**, not “Deploy from a branch.” Branch-based deploys can serve an old `index.html` or wrong artifact.
+- **Homepage still looks like the old Bootstrap / `Shop.htm` site** — That was the legacy static export. It used to live in `/docs` on `main`; it has been moved to `legacy/pre-vite-static-site/` so it is no longer published from `/docs`. Set **Pages → Source** to **GitHub Actions**, let **Deploy Frontend to GitHub Pages** run, then hard refresh. View source: you should see `/assets/index-*.js`, not `static/style.css`.
 - **404 on `/assets/...` or wrong layout** — Check `frontend/vite.config.js`: for a **custom domain at the site root**, `base` must be `"/"`. For `https://<user>.github.io/<repo>/` only, use `base: "/<repo>/"`.
 - **Site looks old after a green workflow** — Hard refresh or clear cache; confirm you are opening the URL that Pages shows for this repo (custom domain vs `*.github.io`).
