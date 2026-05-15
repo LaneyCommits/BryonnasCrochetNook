@@ -39,3 +39,6 @@ __pycache__/
 
 # Optional: keep .env.example so others know what to configure
 # .env.example is NOT ignored
+
+# Local scratch / export images not part of the site build
+/formimg.png

@@ -186,6 +186,32 @@ function App() {
   const [referenceFiles, setReferenceFiles] = useState([]);
   const [status, setStatus] = useState("");
 
+  useEffect(() => {
+    // #region agent log
+    fetch("http://127.0.0.1:7609/ingest/93fcef51-dcf2-4ada-a8a8-820a8696631c", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "e1672a",
+      },
+      body: JSON.stringify({
+        sessionId: "e1672a",
+        runId: "deploy-sync",
+        hypothesisId: "H-PAGES",
+        location: "App.jsx:mount",
+        message: "Client boot context",
+        data: {
+          baseUrl: import.meta.env.BASE_URL,
+          href: window.location.href,
+          pathname: window.location.pathname,
+          hash: window.location.hash,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+  }, []);
+
   const onChange = (event) => {
     const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
