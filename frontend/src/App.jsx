@@ -120,13 +120,66 @@ const ABOUT_HERO_COPY = {
   caption: "Raleigh, NC · April 2026",
 };
 
-const PRODUCT_TYPE_CHOICES = [
-  { id: "tote-bag", label: "Tote Bag", icon: "👜" },
-  { id: "pouch", label: "Pouch", icon: "🎀" },
-  { id: "keychain", label: "Keychain", icon: "🩵" },
-  { id: "sticker", label: "Sticker", icon: "🌸" },
-  { id: "plushie", label: "Plushie", icon: "🧸" },
-  { id: "other", label: "Other", icon: "🎗️" },
+/** Home custom-order checkboxes — `label` is sent to Formspree; `short` keeps compact labels where used. */
+const CUSTOM_ORDER_PRODUCT_OPTIONS = [
+  {
+    id: "regular-plush",
+    short: "Regular plushies",
+    label: "Regular-Sized Plushies (animals, food, objects, etc)",
+  },
+  { id: "small-plush", short: "Small plushies", label: "Small Plushies" },
+  { id: "jumbo-plush", short: "Jumbo plushies", label: "Jumbo-Sized Plushies" },
+  { id: "headbands", short: "Headbands", label: "Headbands" },
+  { id: "scarves", short: "Scarves", label: "Scarves" },
+  { id: "slipper-socks", short: "Slipper socks", label: "Slipper Socks" },
+  { id: "beanies", short: "Beanies", label: "Beanies" },
+  {
+    id: "keychains",
+    short: "Keychains",
+    label: "Keychains",
+  },
+  { id: "lip-balm-holder", short: "Lip balm holder", label: "Lip Balm Holder" },
+  { id: "cup-covers", short: "Cup covers / warmers", label: "Cup Covers/Warmers" },
+  { id: "coasters", short: "Coasters", label: "Coasters" },
+  { id: "thick-blankets", short: "Thick blankets", label: "Thick Blankets" },
+  { id: "fluffy-blankets", short: "Fluffy blankets", label: "Fluffy Blankets" },
+  {
+    id: "bead-bracelets",
+    short: "Glass bead bracelets",
+    label: "Custom Glass Bead Bracelets",
+  },
+];
+
+/** Home custom-order: tap-to-toggle color swatches (labels go to Formspree). */
+const HOME_COLOR_SWATCHES = [
+  { id: "white", caption: "White", label: "White / natural", hex: "#f7f4f0" },
+  { id: "cream", caption: "Cream", label: "Cream", hex: "#faf0dc" },
+  { id: "blush", caption: "Blush", label: "Blush pink", hex: "#f3c6d6" },
+  { id: "rose", caption: "Rose", label: "Rose", hex: "#e8a4bc" },
+  { id: "lavender", caption: "Lavender", label: "Lavender", hex: "#dcd6f2" },
+  { id: "sky", caption: "Sky", label: "Sky blue", hex: "#c9dff5" },
+  { id: "sage", caption: "Sage", label: "Sage green", hex: "#c5d9b8" },
+  { id: "mint", caption: "Mint", label: "Mint", hex: "#c8f0e3" },
+  { id: "butter", caption: "Butter", label: "Butter yellow", hex: "#fce9a6" },
+  { id: "peach", caption: "Peach", label: "Peach", hex: "#ffd4bf" },
+  { id: "tan", caption: "Tan", label: "Tan / camel", hex: "#ddc4a8" },
+  { id: "chocolate", caption: "Chocolate", label: "Chocolate brown", hex: "#8b6b52" },
+  { id: "charcoal", caption: "Charcoal", label: "Soft black / charcoal", hex: "#5c5652" },
+  { id: "red", caption: "Red", label: "Red", hex: "#dc2626" },
+  { id: "burgundy", caption: "Burgundy", label: "Burgundy", hex: "#7f1d1d" },
+  { id: "coral-bright", caption: "Coral", label: "Coral", hex: "#fb7185" },
+  { id: "orange", caption: "Orange", label: "Orange", hex: "#ea580c" },
+  { id: "amber", caption: "Amber", label: "Amber / gold", hex: "#d97706" },
+  { id: "kelly-green", caption: "Kelly", label: "Kelly green", hex: "#16a34a" },
+  { id: "forest-green", caption: "Forest", label: "Forest green", hex: "#14532d" },
+  { id: "teal", caption: "Teal", label: "Teal", hex: "#0f766e" },
+  { id: "navy", caption: "Navy", label: "Navy", hex: "#1e3a8a" },
+  { id: "royal-blue", caption: "Royal", label: "Royal blue", hex: "#2563eb" },
+  { id: "purple", caption: "Purple", label: "Purple", hex: "#7c3aed" },
+  { id: "magenta", caption: "Magenta", label: "Magenta", hex: "#c026d3" },
+  { id: "hot-pink", caption: "Hot pink", label: "Hot pink", hex: "#db2777" },
+  { id: "true-black", caption: "Black", label: "Black", hex: "#0a0a0a" },
+  { id: "heather-gray", caption: "Heather", label: "Heather gray", hex: "#94a3b8" },
 ];
 
 function App() {
@@ -135,24 +188,19 @@ function App() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [formData, setFormData] = useState({
     name: "",
-    item_type: "",
-    notes: "",
-    first_name: "",
-    last_name: "",
     email: "",
-    details: "",
-    product_type: "",
-    quantity: "1",
-    preferred_date: "",
-    additional_notes: "",
+    notes: "",
   });
-  const [referenceFiles, setReferenceFiles] = useState([]);
+  const [homeOrderTypeIds, setHomeOrderTypeIds] = useState([]);
+  const [homeColorIds, setHomeColorIds] = useState([]);
   const [status, setStatus] = useState("");
+  const [orderThankYou, setOrderThankYou] = useState(false);
   const [spamTrap, setSpamTrap] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitCooldownUntil, setSubmitCooldownUntil] = useState(0);
   const lastAttemptRef = useRef(0);
   const formReadyAtRef = useRef(Date.now());
+  const pendingCustomOrderScrollRef = useRef(false);
 
   const onChange = (event) => {
     const { name, value } = event.target;
@@ -161,9 +209,15 @@ function App() {
 
   const onSubmit = async (event) => {
     event.preventDefault();
+    setOrderThankYou(false);
 
     if (spamTrap.trim() !== "") {
       setStatus("Message could not be sent. Please try again later.");
+      return;
+    }
+
+    if (activePage !== "home" || homeOrderTypeIds.length === 0) {
+      setStatus("Please choose at least one item type.");
       return;
     }
 
@@ -203,8 +257,23 @@ function App() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          ...formData,
-          reference_files: referenceFiles.map((file) => file.name),
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          notes: formData.notes.trim(),
+          item_type: homeOrderTypeIds
+            .map(
+              (id) =>
+                CUSTOM_ORDER_PRODUCT_OPTIONS.find((o) => o.id === id)?.label ??
+                id,
+            )
+            .join(", "),
+          product_type: "",
+          color_preferences: homeColorIds
+            .map(
+              (id) =>
+                HOME_COLOR_SWATCHES.find((c) => c.id === id)?.label ?? id,
+            )
+            .join(", "),
           _subject: "Bryonna's Crochet Nook — Custom order request",
         }),
       });
@@ -224,22 +293,17 @@ function App() {
       }
       setSubmitCooldownUntil(Date.now() + CUSTOM_ORDER_SUCCESS_COOLDOWN_MS);
       setSpamTrap("");
-      setStatus("Order submitted! We will contact you soon.");
+      setStatus("");
+      setOrderThankYou(true);
       setFormData({
         name: "",
-        item_type: "",
-        notes: "",
-        first_name: "",
-        last_name: "",
         email: "",
-        details: "",
-        product_type: "",
-        quantity: "1",
-        preferred_date: "",
-        additional_notes: "",
+        notes: "",
       });
-      setReferenceFiles([]);
+      setHomeOrderTypeIds([]);
+      setHomeColorIds([]);
     } catch (error) {
+      setOrderThankYou(false);
       setStatus(
         error instanceof Error ? error.message : "Something went wrong.",
       );
@@ -256,9 +320,25 @@ function App() {
       home: "#/",
       shop: "#/shop",
       about: "#/about",
-      custom: "#/customorder",
     };
     window.location.hash = hashByPage[page] ?? "#/";
+  };
+
+  const scrollToCustomOrderSection = () => {
+    document.getElementById("custom-order")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
+
+  const goToCustomOrderForm = () => {
+    closeMenu();
+    if (activePage !== "home") {
+      pendingCustomOrderScrollRef.current = true;
+      goToPage("home");
+    } else {
+      window.setTimeout(() => scrollToCustomOrderSection(), 0);
+    }
   };
 
   const openCollectionInShop = (category) => {
@@ -271,8 +351,13 @@ function App() {
       const hash = window.location.hash || "#/";
       if (hash === "#/shop") setActivePage("shop");
       else if (hash === "#/about") setActivePage("about");
-      else if (hash === "#/customorder") setActivePage("custom");
-      else setActivePage("home");
+      else if (hash === "#/customorder") {
+        setActivePage("home");
+        window.location.replace(
+          `${window.location.pathname}${window.location.search}#/`,
+        );
+        window.setTimeout(() => scrollToCustomOrderSection(), 120);
+      } else setActivePage("home");
     };
     syncPageFromHash();
     window.addEventListener("hashchange", syncPageFromHash);
@@ -280,10 +365,19 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (activePage !== "home" && activePage !== "custom") return undefined;
+    if (activePage !== "home") return undefined;
     formReadyAtRef.current = Date.now();
     setSpamTrap("");
     return undefined;
+  }, [activePage]);
+
+  useEffect(() => {
+    if (activePage !== "home" || !pendingCustomOrderScrollRef.current) {
+      return undefined;
+    }
+    pendingCustomOrderScrollRef.current = false;
+    const id = window.setTimeout(() => scrollToCustomOrderSection(), 100);
+    return () => window.clearTimeout(id);
   }, [activePage]);
 
   useEffect(() => {
@@ -305,9 +399,16 @@ function App() {
     isSubmitting ||
     (submitCooldownUntil > 0 && Date.now() < submitCooldownUntil);
 
-  const onFileChange = (event) => {
-    const files = Array.from(event.target.files ?? []);
-    setReferenceFiles(files.slice(0, 3));
+  const toggleHomeOrderType = (id) => {
+    setHomeOrderTypeIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  };
+
+  const toggleHomeColor = (id) => {
+    setHomeColorIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
   };
 
   return (
@@ -379,7 +480,7 @@ function App() {
         <button
           type="button"
           className="cta-btn desktop-cta"
-          onClick={() => goToPage("custom")}
+          onClick={goToCustomOrderForm}
         >
           Custom Order
         </button>
@@ -439,6 +540,15 @@ function App() {
           }}
         >
           About
+        </a>
+        <a
+          href="#custom-order"
+          onClick={(event) => {
+            event.preventDefault();
+            goToCustomOrderForm();
+          }}
+        >
+          Custom Order
         </a>
       </nav>
 
@@ -536,24 +646,81 @@ function App() {
                 placeholder="Email address"
                 required
               />
-              <input
-                name="item_type"
-                value={formData.item_type}
-                onChange={onChange}
-                placeholder="Item type (e.g., bunny plush)"
-                required
-              />
+              <fieldset className="order-form-types">
+                <legend className="order-form-types__legend">What would you like?</legend>
+                <div className="order-form-types__grid">
+                  {CUSTOM_ORDER_PRODUCT_OPTIONS.map((opt) => (
+                    <label key={opt.id} className="order-form-types__chk">
+                      <input
+                        type="checkbox"
+                        checked={homeOrderTypeIds.includes(opt.id)}
+                        onChange={() => toggleHomeOrderType(opt.id)}
+                      />
+                      <span className="order-form-types__text">{opt.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+              <div className="order-form-colors" aria-labelledby="order-form-colors-heading">
+                <div id="order-form-colors-heading" className="order-form-colors__label">
+                  Colors
+                </div>
+                <div className="order-form-colors__row" role="group" aria-label="Color ideas">
+                  {HOME_COLOR_SWATCHES.map((c) => {
+                    const on = homeColorIds.includes(c.id);
+                    return (
+                      <div key={c.id} className="order-form-colors__item">
+                        <button
+                          type="button"
+                          className={`order-form-colors__dot${on ? " order-form-colors__dot--selected" : ""}`}
+                          style={{
+                            backgroundColor: c.hex,
+                          }}
+                          title={c.label}
+                          aria-label={c.label}
+                          aria-pressed={on}
+                          onClick={() => toggleHomeColor(c.id)}
+                        />
+                        <span className="order-form-colors__caption" aria-hidden="true">
+                          {c.caption}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
               <textarea
                 name="notes"
                 value={formData.notes}
                 onChange={onChange}
-                placeholder="Describe colors, size, and details"
+                placeholder="Add details"
                 rows={4}
               />
               <button type="submit" disabled={submitDisabled}>
                 Order Yours
               </button>
-              {status && <p className="status">{status}</p>}
+              {orderThankYou ? (
+                <div
+                  className="order-form-success"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <p className="order-form-success__title">
+                    Thank you for your order.
+                  </p>
+                  <p className="order-form-success__text">
+                    We have received your request. You will receive a follow-up
+                    email with pricing information and any additional details we
+                    may need to move your project forward.
+                  </p>
+                  <p className="order-form-success__text">
+                    Because every item is personalized and handmade, lead times
+                    can vary. We appreciate your patience while we prepare your
+                    piece with care.
+                  </p>
+                </div>
+              ) : null}
+              {status ? <p className="status">{status}</p> : null}
             </form>
           </div>
         </section>
@@ -615,194 +782,6 @@ function App() {
                 </article>
               ))}
             </div>
-          </section>
-        </main>
-      ) : null}
-
-      {activePage === "custom" ? (
-        <main id="custom-page" className="content content--subpage customorder-page">
-          <section id="custom-order" className="custom-order custom-order--page-shell">
-            <form id="custom-form" onSubmit={onSubmit} className="order-form order-form--custom-page">
-              <h1 className="custom-form-title">Custom Order</h1>
-              <p className="custom-helper">
-                Tell us what you have in mind and we&apos;ll create something special just for you!
-              </p>
-
-              <div className="order-form-hp" aria-hidden="true">
-                <label htmlFor="custom-order-hp">Company</label>
-                <input
-                  id="custom-order-hp"
-                  type="text"
-                  tabIndex={-1}
-                  autoComplete="off"
-                  value={spamTrap}
-                  onChange={(e) => setSpamTrap(e.target.value)}
-                />
-              </div>
-
-              <section className="custom-step">
-                <h2 className="custom-step-title">
-                  <span className="custom-step-num">1</span>
-                  Product Type
-                </h2>
-                <p className="custom-step-sub">What would you like us to create?</p>
-                <fieldset className="custom-product-grid">
-                  {PRODUCT_TYPE_CHOICES.map((choice) => (
-                    <label key={choice.id} className="custom-product-card">
-                      <input
-                        type="radio"
-                        name="product_type"
-                        value={choice.label}
-                        checked={formData.product_type === choice.label}
-                        onChange={onChange}
-                        required
-                      />
-                      <span className="custom-product-icon" aria-hidden>
-                        {choice.icon}
-                      </span>
-                      <span>{choice.label}</span>
-                    </label>
-                  ))}
-                </fieldset>
-              </section>
-
-              <section className="custom-step">
-                <h2 className="custom-step-title">
-                  <span className="custom-step-num">2</span>
-                  Details
-                </h2>
-                <p className="custom-step-sub">Please describe your idea in as much detail as possible.</p>
-                <textarea
-                  id="custom-details"
-                  name="details"
-                  value={formData.details}
-                  onChange={onChange}
-                  placeholder="e.g. size, color, design, theme, text, inspiration, etc."
-                  rows={4}
-                  required
-                />
-              </section>
-
-              <section className="custom-step">
-                <h2 className="custom-step-title">
-                  <span className="custom-step-num">3</span>
-                  References <small>(Optional)</small>
-                </h2>
-                <p className="custom-step-sub">Upload any images or references to help us understand your idea.</p>
-                <label htmlFor="custom-references" className="custom-upload-box">
-                  <span className="custom-upload-icon" aria-hidden>
-                    ☁️
-                  </span>
-                  <span>Click to upload or drag and drop</span>
-                  <small>PNG, JPG up to 5MB each</small>
-                </label>
-                <input
-                  id="custom-references"
-                  type="file"
-                  accept=".png,.jpg,.jpeg,image/png,image/jpeg"
-                  multiple
-                  onChange={onFileChange}
-                  className="custom-file-input"
-                />
-                {referenceFiles.length > 0 ? (
-                  <p className="custom-file-list">
-                    {referenceFiles.map((file) => file.name).join(", ")}
-                  </p>
-                ) : null}
-              </section>
-
-              <section className="custom-step custom-two-col">
-                <div>
-                  <h2 className="custom-step-title">
-                    <span className="custom-step-num">4</span>
-                    Quantity
-                  </h2>
-                  <p className="custom-step-sub">How many would you like to order?</p>
-                  <select name="quantity" value={formData.quantity} onChange={onChange}>
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5+</option>
-                  </select>
-                </div>
-                <div>
-                  <h2 className="custom-step-title">
-                    <span className="custom-step-num">5</span>
-                    Preferred Date <small>(Optional)</small>
-                  </h2>
-                  <p className="custom-step-sub">When do you need it by?</p>
-                  <input
-                    type="date"
-                    name="preferred_date"
-                    value={formData.preferred_date}
-                    onChange={onChange}
-                  />
-                </div>
-              </section>
-
-              <section className="custom-step">
-                <h2 className="custom-step-title">
-                  <span className="custom-step-num">6</span>
-                  Your Contact Information
-                </h2>
-                <p className="custom-step-sub">We&apos;ll use this to get back to you about your order.</p>
-                <div className="custom-contact-grid">
-                  <div>
-                    <label className="custom-label" htmlFor="first-name">
-                      Name
-                    </label>
-                    <input
-                      id="first-name"
-                      name="first_name"
-                      value={formData.first_name}
-                      onChange={onChange}
-                      placeholder="Your name"
-                      autoComplete="given-name"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="custom-label" htmlFor="email">
-                      Email
-                    </label>
-                    <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={onChange}
-                      placeholder="youremail@example.com"
-                      autoComplete="email"
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="custom-extra-notes">
-                  <label className="custom-label" htmlFor="additional-notes">
-                    Additional Notes (Optional)
-                  </label>
-                  <textarea
-                    id="additional-notes"
-                    name="additional_notes"
-                    value={formData.additional_notes}
-                    onChange={onChange}
-                    rows={3}
-                    placeholder="Any other information you'd like to add?"
-                  />
-                </div>
-              </section>
-
-              <button
-                type="submit"
-                className="custom-submit-btn"
-                disabled={submitDisabled}
-              >
-                ❤ Submit Custom Order
-              </button>
-              <p className="custom-submit-note">We&apos;ll review your request and contact you soon!</p>
-              {status && <p className="status">{status}</p>}
-            </form>
           </section>
         </main>
       ) : null}
