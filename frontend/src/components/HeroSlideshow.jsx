@@ -10,7 +10,7 @@ export const HERO_SLIDES = [
 
 export const HERO_IMAGE_URLS = HERO_SLIDES.map((slide) => slide.src);
 
-export default function HeroSlideshow({ slides = HERO_SLIDES }) {
+export default function HeroSlideshow({ slides = HERO_SLIDES, onShopClick }) {
   const active = slides[0];
 
   if (!active) return null;
@@ -44,7 +44,15 @@ export default function HeroSlideshow({ slides = HERO_SLIDES }) {
             </h1>
             <p className="hero-lead">One stitch at a time</p>
           </div>
-          <a href="#/shop" className="hero-shop-btn">
+          <a
+            href="#/shop"
+            className="hero-shop-btn"
+            onClick={(event) => {
+              if (!onShopClick) return;
+              event.preventDefault();
+              onShopClick();
+            }}
+          >
             Shop Now <span aria-hidden>→</span>
           </a>
         </div>

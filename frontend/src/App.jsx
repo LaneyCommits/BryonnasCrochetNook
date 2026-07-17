@@ -72,6 +72,10 @@ function App() {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
   }, [cart]);
 
+  useEffect(() => {
+    if (activePage !== "shop") setCartOpen(false);
+  }, [activePage]);
+
   const cartCount = cart.reduce((sum, line) => sum + line.qty, 0);
 
   const addToCart = (item) => {
@@ -277,47 +281,48 @@ function App() {
           </a>
         </nav>
 
-        <button
-          type="button"
-          className={`cta-btn desktop-cta${
-            activePage === "customorder" ? " cta-btn--active" : ""
-          }`}
-          onClick={() => goToCustomOrderForm()}
-        >
-          <span className="cta-btn__heart" aria-hidden>
-            ♡
-          </span>
-          Custom Order
-          <span className="cta-btn__heart" aria-hidden>
-            ♡
-          </span>
-        </button>
-
         <div className="nav-actions">
           <button
             type="button"
-            className="icon-btn cart-btn"
-            title="Add pieces from the shop to your cart, then send an order request"
-            aria-label={
-              cartCount > 0
-                ? `Open cart, ${cartCount} items. Add pieces from the shop, then send an order request`
-                : "Open cart. Add pieces from the shop to your cart, then send an order request"
-            }
-            onClick={() => {
-              setCartThankYou(false);
-              setCartOpen(true);
-            }}
+            className={`cta-btn nav-cta${
+              activePage === "customorder" ? " cta-btn--active" : ""
+            }`}
+            onClick={() => goToCustomOrderForm()}
           >
-            <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden>
-              <path
-                fill="currentColor"
-                d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2S15.9 22 17 22s2-.9 2-2-.9-2-2-2zM7.16 14.26l.03.01L19.5 12c.75-.14 1.25-.9 1.1-1.65l-1.4-6.36A1.75 1.75 0 0 0 17.5 2.5H5.21L4.77 1H1v2h2l3.6 7.59-1.35 2.44C4.52 14.37 5.48 16 7 16h12v-2H7.42c-.14 0-.25-.11-.26-.24z"
-              />
-            </svg>
-            {cartCount > 0 ? (
-              <span className="cart-btn__badge">{cartCount}</span>
-            ) : null}
+            <span className="cta-btn__heart" aria-hidden>
+              ♡
+            </span>
+            Custom Order
+            <span className="cta-btn__heart" aria-hidden>
+              ♡
+            </span>
           </button>
+          {activePage === "shop" ? (
+            <button
+              type="button"
+              className="icon-btn cart-btn"
+              title="Add pieces from the shop to your cart, then send an order request"
+              aria-label={
+                cartCount > 0
+                  ? `Open cart, ${cartCount} items. Add pieces from the shop, then send an order request`
+                  : "Open cart. Add pieces from the shop to your cart, then send an order request"
+              }
+              onClick={() => {
+                setCartThankYou(false);
+                setCartOpen(true);
+              }}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden>
+                <path
+                  fill="currentColor"
+                  d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2S15.9 22 17 22s2-.9 2-2-.9-2-2-2zM7.16 14.26l.03.01L19.5 12c.75-.14 1.25-.9 1.1-1.65l-1.4-6.36A1.75 1.75 0 0 0 17.5 2.5H5.21L4.77 1H1v2h2l3.6 7.59-1.35 2.44C4.52 14.37 5.48 16 7 16h12v-2H7.42c-.14 0-.25-.11-.26-.24z"
+                />
+              </svg>
+              {cartCount > 0 ? (
+                <span className="cart-btn__badge">{cartCount}</span>
+              ) : null}
+            </button>
+          ) : null}
         </div>
       </header>
 
@@ -374,7 +379,12 @@ function App() {
       {activePage === "home" ? (
         <>
           <div className="hero-wrap">
-            <HeroSlideshow />
+            <HeroSlideshow
+              onShopClick={() => {
+                setActiveCategory("All");
+                goToPage("shop");
+              }}
+            />
           </div>
 
           <main className="content">
@@ -431,6 +441,42 @@ function App() {
                       </span>
                     </button>
                   ))}
+                </div>
+              </section>
+
+              <section
+                className="home-custom-cta"
+                aria-labelledby="home-custom-cta-title"
+              >
+                <div className="home-custom-cta__media">
+                  <img
+                    src="/bcnimg/photos/plush/BunnyWithHeart.jpeg"
+                    alt="White crochet bunny holding a heart"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
+                <div className="home-custom-cta__copy">
+                  <h2 id="home-custom-cta-title">
+                    Want to make a custom order?
+                  </h2>
+                  <p>
+                    Pick a piece from the shop list or dream something new, and
+                    we&apos;ll stitch it just for you.
+                  </p>
+                  <button
+                    type="button"
+                    className="cta-btn home-custom-cta__btn"
+                    onClick={() => goToCustomOrderForm()}
+                  >
+                    <span className="cta-btn__heart" aria-hidden>
+                      ♡
+                    </span>
+                    Custom Order
+                    <span className="cta-btn__heart" aria-hidden>
+                      ♡
+                    </span>
+                  </button>
                 </div>
               </section>
             </div>
