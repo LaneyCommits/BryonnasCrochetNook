@@ -734,7 +734,7 @@ function App() {
             <div className="hero-media">
               <img
                 className="hero-photo"
-                src="/bcnimg/bcnhero/bcndinohero.png"
+                src="/bcnimg/bcnhero/bcnturtlehero.png"
                 alt=""
                 decoding="async"
               />
