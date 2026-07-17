@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Mystery box">
+  <defs>
+    <linearGradient id="box" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f7efe8"/>
+      <stop offset="100%" stop-color="#e8ddd4"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#box)"/>
+  <rect x="96" y="120" width="320" height="272" rx="28" fill="#fffdfb" stroke="#c97b9a" stroke-width="14"/>
+  <path d="M176 120h160c12 0 22 10 22 22v36H154v-36c0-12 10-22 22-22z" fill="#f3c6d6"/>
+  <text x="256" y="300" text-anchor="middle" font-family="Georgia, serif" font-size="180" font-weight="700" fill="#5a7ec4">?</text>
+</svg>

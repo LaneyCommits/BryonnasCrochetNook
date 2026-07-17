@@ -1,72 +1,52 @@
-import { useEffect, useState } from "react";
-
-const SLIDE_INTERVAL_MS = 5500;
-
-/** Paths match `public/bcnimg/bcnhero/` (source: `bcnimg/bcnhero/`). */
-export const HERO_IMAGE_URLS = [
-  "/bcnimg/bcnhero/bcnturtlehero.png",
-  "/bcnimg/bcnhero/bcndinohero.png",
-  "/bcnimg/bcnhero/bcngummyhero.png",
+/** Single home hero image for now — add more slides later as needed. */
+export const HERO_SLIDES = [
+  {
+    id: "jumbo-turtle",
+    src: "/bcnimg/photos/plush/SeaTurtleJUMBO.jpeg",
+    kind: "photo",
+    objectPosition: "center 40%",
+  },
 ];
 
-export default function HeroSlideshow({ images = HERO_IMAGE_URLS }) {
-  const [index, setIndex] = useState(0);
+export const HERO_IMAGE_URLS = HERO_SLIDES.map((slide) => slide.src);
 
-  useEffect(() => {
-    if (images.length <= 1) return undefined;
-    const id = setInterval(() => {
-      setIndex((i) => (i + 1) % images.length);
-    }, SLIDE_INTERVAL_MS);
-    return () => clearInterval(id);
-  }, [images.length]);
+export default function HeroSlideshow({ slides = HERO_SLIDES }) {
+  const active = slides[0];
+
+  if (!active) return null;
 
   return (
     <section
       id="home"
-      className="hero hero--overlay hero--slideshow"
-      aria-roledescription="carousel"
-      aria-label="Featured crochet photos"
+      className={`hero hero--overlay hero--slideshow hero--home hero--${active.kind}`}
+      aria-label="Featured crochet photo"
     >
       <div className="hero-media">
-        <div className="hero-slides" aria-live="polite">
+        <div className="hero-slides">
           <img
-            key={images[index]}
             className="hero-photo"
-            src={images[index]}
+            src={active.src}
             alt=""
             decoding="async"
             fetchPriority="high"
+            style={{ objectPosition: active.objectPosition }}
           />
         </div>
 
         <div className="hero-copy-panel">
           <div className="hero-copy-stack">
+            <p className="hero-brand">Bryonna&apos;s Crochet Nook</p>
             <h1 className="hero-heading">
               <span className="hero-title-word">
                 <span className="hero-title-hand">Hand</span>
                 <span className="hero-title-made">made</span>
               </span>
             </h1>
-            <p className="hero-lead">One Stitch at a Time</p>
-            <p className="hero-lead-sub">Crochet Creations for You</p>
+            <p className="hero-lead">One stitch at a time</p>
           </div>
           <a href="#/shop" className="hero-shop-btn">
             Shop Now <span aria-hidden>→</span>
           </a>
-        </div>
-
-        <div className="hero-dots" role="tablist" aria-label="Slide indicators">
-          {images.map((_, i) => (
-            <button
-              key={String(i)}
-              type="button"
-              role="tab"
-              aria-selected={i === index}
-              className={`hero-dot ${i === index ? "hero-dot--active" : ""}`}
-              onClick={() => setIndex(i)}
-              aria-label={`Go to slide ${i + 1}`}
-            />
-          ))}
         </div>
       </div>
     </section>
